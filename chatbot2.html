@@ -1,0 +1,1714 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Librín — Asistente BIDIG</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Poppins:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        #librin-bubble {
+            position: fixed;
+            bottom: 28px;
+            left: 28px;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 9999;
+            filter: drop-shadow(0 6px 20px rgba(30, 90, 200, 0.45));
+            animation: bubbleFloat 3s ease-in-out infinite;
+            transition: transform 0.2s;
+        }
+
+        #librin-bubble:hover {
+            transform: scale(1.12);
+        }
+
+        #librin-bubble img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        #librin-bubble::before {
+            content: '';
+            position: absolute;
+            inset: -6px;
+            border-radius: 50%;
+            border: 3px solid rgba(59, 130, 246, 0.5);
+            animation: pulseRing 2s ease-out infinite;
+        }
+
+        #notif-dot {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 14px;
+            height: 14px;
+            background: #ef4444;
+            border-radius: 50%;
+            border: 2px solid white;
+            animation: notifPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes bubbleFloat {
+
+            0%,
+            100% {
+                transform: translateY(0)
+            }
+
+            50% {
+                transform: translateY(-8px)
+            }
+        }
+
+        @keyframes pulseRing {
+            0% {
+                transform: scale(1);
+                opacity: 1
+            }
+
+            100% {
+                transform: scale(1.5);
+                opacity: 0
+            }
+        }
+
+        @keyframes notifPop {
+            from {
+                transform: scale(0)
+            }
+
+            to {
+                transform: scale(1)
+            }
+        }
+
+        #librin-chat {
+            position: fixed;
+            bottom: 110px;
+            left: 28px;
+            width: 390px;
+            max-height: 620px;
+            background: #fff;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18), 0 4px 16px rgba(59, 130, 246, 0.15);
+            z-index: 9998;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transform-origin: bottom left;
+            transform: scale(0) translateY(20px);
+            opacity: 0;
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        #librin-chat.open {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 60%, #60a5fa 100%);
+            padding: 16px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .chat-header::after {
+            content: '';
+            position: absolute;
+            top: -30px;
+            right: -30px;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .header-avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.7);
+            object-fit: cover;
+            animation: headerBob 2s ease-in-out infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes headerBob {
+
+            0%,
+            100% {
+                transform: rotate(-3deg)
+            }
+
+            50% {
+                transform: rotate(3deg)
+            }
+        }
+
+        .header-info {
+            flex: 1;
+        }
+
+        .header-info h3 {
+            color: white;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 800;
+            font-size: 1rem;
+        }
+
+        .header-info p {
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 0.72rem;
+            margin-top: 1px;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #4ade80;
+            border-radius: 50%;
+            margin-right: 5px;
+            animation: blink 2s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: 0.4
+            }
+        }
+
+        .close-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.35);
+        }
+
+        .quick-topics {
+            padding: 10px 14px 6px;
+            background: #f8faff;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .topic-chip {
+            background: white;
+            border: 1.5px solid #bfdbfe;
+            color: #1d4ed8;
+            font-size: 0.68rem;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            padding: 4px 10px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .topic-chip:hover {
+            background: #eff6ff;
+            border-color: #3b82f6;
+            transform: translateY(-1px);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            scroll-behavior: smooth;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .msg {
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+            animation: msgIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes msgIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px) scale(0.95)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1)
+            }
+        }
+
+        .msg.user {
+            flex-direction: row-reverse;
+        }
+
+        .msg-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .bubble {
+            max-width: 78%;
+            padding: 10px 14px;
+            border-radius: 18px;
+            font-size: 0.82rem;
+            line-height: 1.5;
+            word-wrap: break-word;
+            word-break: normal;
+            white-space: normal;
+            overflow-wrap: break-word;
+        }
+
+        .msg.bot .bubble {
+            background: #f1f5fd;
+            color: #1e293b;
+            border-bottom-left-radius: 4px;
+        }
+
+        .msg.user .bubble {
+            background: linear-gradient(135deg, #1e40af, #3b82f6);
+            color: white;
+            border-bottom-right-radius: 4px;
+            min-width: 80px;
+        }
+
+        .msg-time {
+            font-size: 0.63rem;
+            color: #94a3b8;
+            margin-top: 3px;
+        }
+
+        .msg.user .msg-time {
+            text-align: right;
+        }
+
+        /* ── BOTONES DE OPCIONES ── */
+        .opciones-btns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .opc-btn {
+            background: white;
+            border: 1.5px solid #bfdbfe;
+            color: #1d4ed8;
+            font-size: 0.75rem;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .opc-btn:hover {
+            background: #eff6ff;
+            border-color: #3b82f6;
+            transform: translateY(-1px);
+        }
+
+        .opc-btn.selected {
+            background: #1e40af;
+            color: white;
+            border-color: #1e40af;
+        }
+
+        .opc-btn:disabled {
+            opacity: 0.5;
+            cursor: default;
+            transform: none;
+        }
+
+        /* ── PASO A PASO ── */
+        .step-card {
+            background: #f8faff;
+            border: 1.5px solid #bfdbfe;
+            border-radius: 16px;
+            padding: 14px;
+            margin-top: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .step-card h4 {
+            color: #1e40af;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 800;
+            font-size: 0.88rem;
+        }
+
+        .step-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 20px;
+            padding: 3px 10px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: #1d4ed8;
+            width: fit-content;
+        }
+
+        /* ── INFO CARD (acceso) ── */
+        .info-card {
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            border: 1.5px solid #93c5fd;
+            border-radius: 16px;
+            padding: 14px;
+            font-size: 0.8rem;
+            line-height: 1.8;
+            margin-top: 4px;
+        }
+
+        .info-card .info-title {
+            color: #1e40af;
+            font-weight: 800;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.92rem;
+            margin-bottom: 8px;
+        }
+
+        .info-card a {
+            color: #1d4ed8;
+            font-weight: 600;
+        }
+
+        .info-card .step-num {
+            display: inline-flex;
+            width: 20px;
+            height: 20px;
+            background: #1e40af;
+            color: white;
+            border-radius: 50%;
+            font-size: 0.65rem;
+            font-weight: 800;
+            align-items: center;
+            justify-content: center;
+            margin-right: 4px;
+        }
+
+        /* ── FORMULARIOS ── */
+        .reserva-form {
+            background: #f8faff;
+            border: 1.5px solid #bfdbfe;
+            border-radius: 16px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        .reserva-form h4 {
+            color: #1e40af;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 800;
+            font-size: 0.9rem;
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .form-field label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .form-field input,
+        .form-field select,
+        .form-field textarea {
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 7px 10px;
+            font-size: 0.78rem;
+            font-family: 'Poppins', sans-serif;
+            outline: none;
+            transition: border 0.2s;
+            background: white;
+        }
+
+        .form-field input:focus,
+        .form-field select:focus,
+        .form-field textarea:focus {
+            border-color: #3b82f6;
+        }
+
+        .form-field textarea {
+            resize: none;
+            min-height: 70px;
+        }
+
+        .personas-select-wrapper {
+            position: relative;
+        }
+
+        .personas-select-wrapper select {
+            width: 100%;
+            appearance: none;
+            background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center;
+            padding-right: 30px;
+            cursor: pointer;
+        }
+
+        .capacidad-badge {
+            margin-top: 4px;
+            font-size: 0.68rem;
+            color: #1d4ed8;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 3px 8px;
+            display: inline-block;
+        }
+
+        .form-submit {
+            background: linear-gradient(135deg, #1e40af, #3b82f6);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 9px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            transition: transform 0.2s;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
+        }
+
+        .form-submit:hover {
+            transform: translateY(-1px);
+        }
+
+        .asistentes-container {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .asistente-row {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .asistente-row input {
+            flex: 1;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 6px 10px;
+            font-size: 0.75rem;
+            font-family: 'Poppins', sans-serif;
+            outline: none;
+            transition: border 0.2s;
+            background: white;
+        }
+
+        .asistente-row input:focus {
+            border-color: #3b82f6;
+        }
+
+        /* ── CONFIRMACIÓN ── */
+        .confirmacion-card {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border: 1.5px solid #86efac;
+            border-radius: 16px;
+            padding: 14px;
+            font-size: 0.8rem;
+            line-height: 1.8;
+            margin-top: 4px;
+        }
+
+        .confirmacion-card .conf-title {
+            color: #166534;
+            font-weight: 800;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+        }
+
+        .nota-card {
+            background: linear-gradient(135deg, #fffbeb, #fef3c7);
+            border: 1.5px solid #fcd34d;
+            border-radius: 16px;
+            padding: 12px;
+            font-size: 0.75rem;
+            line-height: 1.8;
+            margin-top: 8px;
+            color: #78350f;
+        }
+
+        .nota-card strong {
+            color: #92400e;
+            display: block;
+            margin-bottom: 4px;
+            font-size: 0.8rem;
+        }
+
+        /* ── CUBÍCULOS ── */
+        .cubiculos-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .cubiculo-card {
+            background: white;
+            border: 1.5px solid #bfdbfe;
+            border-radius: 14px;
+            padding: 10px 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .cubiculo-card:hover {
+            background: #eff6ff;
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+        }
+
+        .cubiculo-card .icon {
+            font-size: 1.6rem;
+            margin-bottom: 4px;
+        }
+
+        .cubiculo-card .nombre {
+            font-weight: 700;
+            color: #1e40af;
+            font-size: 0.78rem;
+            font-family: 'Nunito', sans-serif;
+        }
+
+        .cubiculo-card .capacidad {
+            font-size: 0.68rem;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        /* ── TYPING ── */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 10px 14px;
+        }
+
+        .typing-dot {
+            width: 7px;
+            height: 7px;
+            background: #94a3b8;
+            border-radius: 50%;
+            animation: typingBounce 1.2s ease-in-out infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typingBounce {
+
+            0%,
+            60%,
+            100% {
+                transform: translateY(0)
+            }
+
+            30% {
+                transform: translateY(-6px)
+            }
+        }
+
+        /* ── INPUT ── */
+        .chat-input-area {
+            padding: 12px 14px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            background: white;
+            flex-shrink: 0;
+        }
+
+        #chat-input {
+            flex: 1;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 22px;
+            padding: 9px 16px;
+            font-size: 0.82rem;
+            font-family: 'Poppins', sans-serif;
+            outline: none;
+            transition: border 0.2s;
+            resize: none;
+            max-height: 80px;
+            background: #f8faff;
+        }
+
+        #chat-input:focus {
+            border-color: #3b82f6;
+            background: white;
+        }
+
+        #send-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1e40af, #3b82f6);
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: transform 0.2s;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        #send-btn:hover {
+            transform: scale(1.08);
+        }
+
+        #send-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        #welcome-tooltip {
+            position: fixed;
+            bottom: 110px;
+            left: 28px;
+            background: white;
+            color: #1e293b;
+            padding: 10px 16px;
+            border-radius: 16px 16px 16px 4px;
+            font-size: 0.78rem;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 700;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            z-index: 9997;
+            max-width: 210px;
+            border: 2px solid #bfdbfe;
+            animation: tooltipIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 1.5s both;
+        }
+
+        @keyframes tooltipIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px) scale(0.9)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1)
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="welcome-tooltip">¡Hola! 👋 Soy Librín. ¿En qué te ayudo hoy?</div>
+
+    <div id="librin-bubble" onclick="toggleChat()">
+        <div id="notif-dot"></div>
+        <img src="https://bidig.areandina.edu.co/wp-content/uploads/2025/07/d9f48879-c76c-4e2b-95d4-8007ba5d9350.png"
+            onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%231e40af%22/%3E%3Ctext x=%2250%22 y=%2265%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2250%22%3E📚%3C/text%3E%3C/svg%3E'"
+            alt="Librín">
+    </div>
+
+    <div id="librin-chat">
+        <div class="chat-header">
+            <img class="header-avatar"
+                src="https://bidig.areandina.edu.co/wp-content/uploads/2025/07/d9f48879-c76c-4e2b-95d4-8007ba5d9350.png"
+                onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23eff6ff%22/%3E%3Ctext x=%2250%22 y=%2265%22 text-anchor=%22middle%22 font-size=%2250%22%3E📚%3C/text%3E%3C/svg%3E'"
+                alt="Librín">
+            <div class="header-info">
+                <h3>Librín 📚</h3>
+                <p><span class="status-dot"></span>Biblioteca Otto Morales Benítez · Pereira</p>
+            </div>
+            <button class="close-btn" onclick="toggleChat()">✕</button>
+        </div>
+
+        <div class="quick-topics">
+            <button class="topic-chip" onclick="iniciarFlujoAcceso()">🔑 Acceso</button>
+            <button class="topic-chip" onclick="mostrarCubiculos()">🪑 Reservar</button>
+            <button class="topic-chip" onclick="iniciarFlujoPrestamo()">📖 Préstamo</button>
+            <button class="topic-chip" onclick="iniciarFlujoSoporte()">🛠️ Soporte</button>
+            <button class="topic-chip" onclick="sendQuick('¿Qué bases de datos tienen disponibles?')">📊 Bases de
+                datos</button>
+            <button class="topic-chip" onclick="mostrarFormRenovar()">🔄 Renovar reserva</button>
+        </div>
+
+        <div class="chat-messages" id="chat-messages"></div>
+
+        <div class="chat-input-area">
+            <textarea id="chat-input" placeholder="Escribe tu mensaje..." rows="1"
+                onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}"
+                oninput="autoResize(this)"></textarea>
+            <button id="send-btn" onclick="sendMessage()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const AVATAR = 'https://bidig.areandina.edu.co/wp-content/uploads/2025/07/d9f48879-c76c-4e2b-95d4-8007ba5d9350.png';
+        const FALLBACK = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23eff6ff'/%3E%3Ctext x='50' y='65' text-anchor='middle' font-size='50'%3E📚%3C/text%3E%3C/svg%3E";
+
+        const NOTAS = [
+            "📚 Recuerda: el silencio también es respeto. Mantengamos un ambiente ideal para estudiar.",
+            "🤫 Tu voz baja ayuda a que todos aprendamos mejor.",
+            "🔕 Modo silencio activado = concentración garantizada.",
+            "🚫 No está permitido consumir alimentos ni bebidas dentro de la biblioteca.",
+            "🥤 Cuida los libros y equipos: evita ingresar comida o bebidas.",
+            "📵 Celular en silencio, mente en enfoque.",
+            "⏳ Respeta el horario de tu reserva y el tiempo de los demás.",
+            "🧹 Deja tu espacio limpio y listo para el siguiente usuario.",
+            "📚 La Biblioteca Otto Morales es un espacio de respeto y aprendizaje. ¡Cuidémosla!",
+            "✨ El buen comportamiento también hace parte del conocimiento."
+        ];
+
+        const CUBICULOS = [
+            { tipo: 'individual', icon: '🧑‍💻', nombre: 'Individual', capacidad: '1 persona', min: 1, max: 1 },
+            { tipo: 'doble', icon: '👥', nombre: 'Doble', capacidad: '1 a 3 personas', min: 1, max: 3 },
+            { tipo: 'grupal', icon: '👨‍👩‍👧‍👦', nombre: 'Grupal', capacidad: '3 a 6 personas', min: 3, max: 6 },
+            { tipo: 'sala_interactiva', icon: '🖥️', nombre: 'Sala Interactiva', capacidad: '6 a 13 personas', min: 6, max: 13 }
+        ];
+
+        const SYSTEM_PROMPT = `Eres Librín, la mascota y asistente virtual oficial de la Biblioteca Digital de la Fundación Universitaria del Área Andina (Areandina), accesible en https://bidig.areandina.edu.co/.
+
+PERSONALIDAD: Amigable, entusiasta, paciente y muy servicial. Hablas en español con tono cálido y cercano. Usas emojis de forma moderada 📚.
+
+BIBLIOTECA FÍSICA - SEDE PEREIRA:
+Nombre: Biblioteca Otto Morales Benítez
+Horario: Lunes a Viernes 8:00am - 8:00pm | Sábados 8:00am - 12:00pm | Domingos y festivos: CERRADO
+
+ESPACIOS: Cubículo Individual (1p), Doble (1-3p), Grupal (3-6p), Sala Interactiva (6-13p).
+NORMAS: Silencio, no alimentos ni bebidas, celular en vibración, respetar horario, dejar espacio limpio.
+BASES DE DATOS (90+): EBSCOhost, ProQuest, Scopus, Web of Science, Science Direct, Springer, Elsevier, Taylor & Francis, Wiley y más.
+ACCESO BIDIG: https://bidig.areandina.edu.co/ | CONTACTO: biblioteca@areandina.edu.co
+
+Responde siempre de forma concisa, cálida y útil. Máximo 3 párrafos cortos.`;
+
+        let chatOpen = false;
+        let messageHistory = [];
+        let firstOpen = true;
+        let reservaData = {};
+        let asistentesCount = 1;
+        let flujoData = {};
+
+        // ─── UTILIDADES ───────────────────────────────────────────────────────────────
+        function getTime() { return new Date().toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }); }
+        function getNota() { return NOTAS[Math.floor(Math.random() * NOTAS.length)]; }
+
+        function addBotMessage(text, extraHTML = '') {
+            const msgs = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.className = 'msg bot';
+            const formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+            div.innerHTML = `
+        <img class="msg-avatar" src="${AVATAR}" onerror="this.src='${FALLBACK}'" alt="Librín">
+        <div>
+            <div class="bubble">${formatted}</div>
+            ${extraHTML}
+            <div class="msg-time">${getTime()}</div>
+        </div>`;
+            msgs.appendChild(div);
+            msgs.scrollTop = msgs.scrollHeight;
+            return div;
+        }
+
+        function addUserMessage(text) {
+            const msgs = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.className = 'msg user';
+            div.innerHTML = `
+        <div>
+            <div class="bubble">${text.replace(/</g, '&lt;')}</div>
+            <div class="msg-time">${getTime()}</div>
+        </div>`;
+            msgs.appendChild(div);
+            msgs.scrollTop = msgs.scrollHeight;
+        }
+
+        function showTyping() {
+            const msgs = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.className = 'msg bot'; div.id = 'typing-msg';
+            div.innerHTML = `
+        <img class="msg-avatar" src="${AVATAR}" onerror="this.src='${FALLBACK}'" alt="">
+        <div class="bubble typing-indicator">
+            <span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>
+        </div>`;
+            msgs.appendChild(div);
+            msgs.scrollTop = msgs.scrollHeight;
+        }
+
+        function removeTyping() { const t = document.getElementById('typing-msg'); if (t) t.remove(); }
+
+        function addOpciones(opciones) {
+            const msgs = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.className = 'msg bot';
+            div.innerHTML = `
+        <img class="msg-avatar" src="${AVATAR}" onerror="this.src='${FALLBACK}'" alt="">
+        <div>
+            <div class="opciones-btns">
+                ${opciones.map(o => `<button class="opc-btn" onclick="${o.fn}">${o.label}</button>`).join('')}
+            </div>
+        </div>`;
+            msgs.appendChild(div);
+            msgs.scrollTop = msgs.scrollHeight;
+        }
+
+        function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+        async function botResponde(text, extraHTML = '', ms = 600) {
+            showTyping();
+            await delay(ms);
+            removeTyping();
+            addBotMessage(text, extraHTML);
+        }
+
+        // ─── TOGGLE ───────────────────────────────────────────────────────────────────
+        function toggleChat() {
+            chatOpen = !chatOpen;
+            const chat = document.getElementById('librin-chat');
+            const tooltip = document.getElementById('welcome-tooltip');
+            const notif = document.getElementById('notif-dot');
+            if (chatOpen) {
+                chat.classList.add('open');
+                if (tooltip) tooltip.style.display = 'none';
+                if (notif) notif.remove();
+                if (firstOpen) {
+                    firstOpen = false;
+                    setTimeout(() => addBotMessage(
+                        "¡Hola! 👋 Soy **Librín**, tu asistente de la **Biblioteca Otto Morales Benítez** — sede Pereira.\n\nPuedo ayudarte con:",
+                        `<div class="opciones-btns" style="margin-top:8px">
+                    <button class="opc-btn" onclick="iniciarFlujoAcceso()">🔑 Acceso BIDIG</button>
+                    <button class="opc-btn" onclick="mostrarCubiculos()">🪑 Reservar espacio</button>
+                    <button class="opc-btn" onclick="iniciarFlujoPrestamo()">📖 Préstamo de libro</button>
+                    <button class="opc-btn" onclick="iniciarFlujoSoporte()">🛠️ Soporte técnico</button>
+                    <button class="opc-btn" onclick="sendQuick('¿Qué bases de datos tienen?')">📊 Bases de datos</button>
+                    <button class="opc-btn" onclick="mostrarFormRenovar()">🔄 Renovar reserva</button>
+                </div>`
+                    ), 400);
+                }
+            } else {
+                chat.classList.remove('open');
+            }
+        }
+
+        // ══════════════════════════════════════════════════════════════════════════════
+        // FLUJO 1: ACCESO A BIDIG
+        // ══════════════════════════════════════════════════════════════════════════════
+        async function iniciarFlujoAcceso() {
+            addUserMessage('🔑 Acceso a la biblioteca digital');
+            await botResponde(
+                "¡Con gusto te ayudo! 🎓 Para acceder a la **Biblioteca Digital BIDIG** necesitas saber tu tipo de usuario:",
+                `<div class="opciones-btns" style="margin-top:8px">
+            <button class="opc-btn" onclick="flujoAccesoPaso2('estudiante')">🎓 Soy estudiante</button>
+            <button class="opc-btn" onclick="flujoAccesoPaso2('docente')">👨‍🏫 Soy docente</button>
+            <button class="opc-btn" onclick="flujoAccesoPaso2('egresado')">🏅 Soy egresado</button>
+            <button class="opc-btn" onclick="flujoAccesoPaso2('externo')">👤 Soy usuario externo</button>
+        </div>`
+            );
+        }
+
+        async function flujoAccesoPaso2(tipo) {
+            const labels = { estudiante: '🎓 Soy estudiante', docente: '👨‍🏫 Soy docente', egresado: '🏅 Soy egresado', externo: '👤 Soy usuario externo' };
+            addUserMessage(labels[tipo]);
+
+            if (tipo === 'externo') {
+                await botResponde(
+                    "Los usuarios externos pueden acceder a algunos recursos en sala. Para más información contacta directamente a la biblioteca:",
+                    `<div class="info-card" style="margin-top:8px">
+                <div class="info-title">📞 Contacto Biblioteca</div>
+                📧 <a href="mailto:biblioteca@areandina.edu.co">biblioteca@areandina.edu.co</a><br>
+                🕐 Lun–Vie 8:00am – 8:00pm<br>
+                📅 Sábados 8:00am – 12:00pm
+            </div>`
+                );
+                return;
+            }
+
+            await botResponde(
+                `¡Perfecto! Como **${labels[tipo].replace(/^. /, '')}** tienes acceso completo a BIDIG. ¿Ya tienes cuenta o es tu primera vez?`,
+                `<div class="opciones-btns" style="margin-top:8px">
+            <button class="opc-btn" onclick="flujoAccesoPaso3('nueva','${tipo}')">✨ Primera vez</button>
+            <button class="opc-btn" onclick="flujoAccesoPaso3('recuperar','${tipo}')">🔒 Olvidé mi contraseña</button>
+            <button class="opc-btn" onclick="flujoAccesoPaso3('problema','${tipo}')">⚠️ Tengo otro problema</button>
+        </div>`
+            );
+        }
+
+        async function flujoAccesoPaso3(situacion, tipo) {
+            const labels = { nueva: '✨ Primera vez', recuperar: '🔒 Olvidé mi contraseña', problema: '⚠️ Tengo otro problema' };
+            addUserMessage(labels[situacion]);
+
+            if (situacion === 'nueva') {
+                await botResponde(
+                    "¡Para acceder a BIDIG **no necesitas crear una cuenta nueva**! 🎓\n\nUsa directamente tus **credenciales institucionales de Areandina** que ya tienes:",
+                    `<div class="info-card" style="margin-top:8px">
+                <div class="info-title">🔑 Cómo ingresar a BIDIG</div>
+                <span class="step-num">1</span> Ve a <a href="https://bidig.areandina.edu.co/" target="_blank">bidig.areandina.edu.co</a><br>
+                <span class="step-num">2</span> Haz clic en <strong>"Iniciar sesión"</strong><br>
+                <span class="step-num">3</span> Ingresa tu <strong>correo @areandina.edu.co</strong><br>
+                <span class="step-num">4</span> Usa la <strong>misma contraseña del campus virtual</strong><br><br>
+                📌 Es el mismo usuario y contraseña que usas para todo en Areandina.
+            </div>`,
+                    800
+                );
+                await delay(400);
+                await botResponde(
+                    "¿Pudiste ingresar o tienes algún problema?",
+                    `<div class="opciones-btns" style="margin-top:8px">
+                <button class="opc-btn" onclick="addUserMessage('✅ Sí, ya entré'); botResponde('¡Perfecto! 🎉 Ya tienes acceso a más de 90 bases de datos académicas. ¿En qué más te puedo ayudar?')">✅ Sí, ya entré</button>
+                <button class="opc-btn" onclick="flujoAccesoProblema()">❌ No puedo entrar</button>
+            </div>`
+                );
+            } else if (situacion === 'recuperar') {
+                await botResponde(
+                    "La contraseña de BIDIG es la **misma del campus virtual** de Areandina 🔐\n\nSi no la recuerdas, sigue estos pasos:",
+                    `<div class="info-card" style="margin-top:8px">
+                <div class="info-title">🔑 Recuperar acceso institucional</div>
+                <span class="step-num">1</span> Intenta en <a href="https://campusvirtual.areandina.edu.co/" target="_blank">campusvirtual.areandina.edu.co</a><br>
+                <span class="step-num">2</span> Usa la opción <strong>"¿Olvidaste tu contraseña?"</strong><br>
+                <span class="step-num">3</span> O escribe a <a href="mailto:sistemas@areandina.edu.co">sistemas@areandina.edu.co</a><br>
+                <span class="step-num">4</span> También puedes acercarte a la biblioteca física<br><br>
+                📌 Una vez recuperada, funciona para <strong>BIDIG, campus virtual y correo</strong>.
+            </div>`,
+                    800
+                );
+                await delay(400);
+                await botResponde(
+                    "¿Pudiste recuperar tu acceso?",
+                    `<div class="opciones-btns" style="margin-top:8px">
+                <button class="opc-btn" onclick="addUserMessage('✅ Sí, ya pude'); botResponde('¡Perfecto! 🎉 Ya puedes acceder a BIDIG con tus credenciales institucionales.')">✅ Sí, ya pude</button>
+                <button class="opc-btn" onclick="flujoAccesoProblema()">❌ Sigo sin poder</button>
+            </div>`
+                );
+            } else {
+                await flujoAccesoProblema();
+            }
+        }
+
+        async function flujoAccesoProblema() {
+            await botResponde(
+                "Entiendo 😔 Vamos a escalar tu caso. ¿Cuál es el problema específico?",
+                `<div class="opciones-btns" style="margin-top:8px">
+            <button class="opc-btn" onclick="flujoAccesoEscalar('No me llega el correo de verificación')">📧 No llega el correo</button>
+            <button class="opc-btn" onclick="flujoAccesoEscalar('Mi cuenta está bloqueada')">🔒 Cuenta bloqueada</button>
+            <button class="opc-btn" onclick="flujoAccesoEscalar('No puedo acceder desde mi dispositivo')">💻 Problema en mi dispositivo</button>
+            <button class="opc-btn" onclick="flujoAccesoEscalar('Otro problema de acceso')">❓ Otro problema</button>
+        </div>`
+            );
+        }
+
+        async function flujoAccesoEscalar(problema) {
+            addUserMessage(problema);
+            await botResponde(
+                `Entendido. El problema **"${problema}"** requiere atención del equipo de soporte. Te recomiendo:`,
+                `<div class="info-card" style="margin-top:8px">
+            <div class="info-title">📩 Contactar Soporte BIDIG</div>
+            📧 Escribe a <a href="mailto:biblioteca@areandina.edu.co">biblioteca@areandina.edu.co</a><br>
+            📝 Asunto: <strong>Problema de acceso BIDIG</strong><br>
+            📋 Incluye: tu nombre, cédula, correo institucional y descripción del problema.<br><br>
+            ⏱️ Tiempo de respuesta: <strong>1-2 días hábiles</strong>
+        </div>`,
+                800
+            );
+            await delay(400);
+            await botResponde(
+                "¿Quieres que registre tu caso de soporte ahora mismo?",
+                `<div class="opciones-btns" style="margin-top:8px">
+            <button class="opc-btn" onclick="iniciarFlujoSoporte()">✅ Sí, registrar caso</button>
+            <button class="opc-btn" onclick="addUserMessage('No, gracias'); botResponde('De acuerdo 👍 Si necesitas más ayuda, aquí estaré. ¡Mucho éxito!')">No, gracias</button>
+        </div>`
+            );
+        }
+
+        // ══════════════════════════════════════════════════════════════════════════════
+        // FLUJO 2: PRÉSTAMO DE LIBRO
+        // ══════════════════════════════════════════════════════════════════════════════
+        async function iniciarFlujoPrestamo() {
+            addUserMessage('📖 Quiero solicitar un préstamo de libro');
+            flujoData.prestamo = {};
+            await botResponde(
+                "¡Claro que sí! 📚 Te ayudo con el préstamo. Primero dime, ¿qué tipo de préstamo necesitas?",
+                `<div class="opciones-btns" style="margin-top:8px">
+            <button class="opc-btn" onclick="flujoPrestamoPaso2('fisico')">📗 Libro físico (sala)</button>
+            <button class="opc-btn" onclick="flujoPrestamoPaso2('digital')">💻 Recurso digital</button>
+            <button class="opc-btn" onclick="flujoPrestamoPaso2('domicilio')">🏠 Préstamo a domicilio</button>
+        </div>`
+            );
+        }
+
+        async function flujoPrestamoPaso2(tipo) {
+            const labels = { fisico: '📗 Libro físico (sala)', digital: '💻 Recurso digital', domicilio: '🏠 Préstamo a domicilio' };
+            addUserMessage(labels[tipo]);
+            flujoData.prestamo.tipo = tipo;
+
+            if (tipo === 'digital') {
+                await botResponde(
+                    "Para acceder a recursos digitales solo necesitas tu cuenta BIDIG. Tenemos más de **90 bases de datos** disponibles 🌐:",
+                    `<div class="info-card" style="margin-top:8px">
+                <div class="info-title">📊 Bases de datos destacadas</div>
+                🔬 <strong>Ciencias:</strong> Scopus, Web of Science, Science Direct<br>
+                📖 <strong>Humanidades:</strong> EBSCOhost, ProQuest<br>
+                ⚕️ <strong>Salud:</strong> Elsevier, Springer<br>
+                🏗️ <strong>Ingeniería:</strong> IEEE, Taylor & Francis<br><br>
+                🔗 Accede en: <a href="https://bidig.areandina.edu.co/" target="_blank">bidig.areandina.edu.co</a>
+            </div>`,
+                    800
+                );
+                await delay(400);
+                await botResponde(
+                    "¿Necesitas ayuda para encontrar un recurso específico?",
+                    `<div class="opciones-btns" style="margin-top:8px">
+                <button class="opc-btn" onclick="addUserMessage('Sí, buscar recurso'); flujoPrestamoBuscar()">🔍 Sí, ayúdame a buscar</button>
+                <button class="opc-btn" onclick="addUserMessage('No, ya sé cómo acceder'); botResponde('¡Perfecto! 🎉 Recuerda que necesitas tu usuario y contraseña institucional. ¡Mucho éxito!')">✅ Ya sé cómo acceder</button>
+            </div>`
+                );
+                return;
+            }
+
+            await botResponde(
+                tipo === 'domicilio'
+                    ? "El préstamo a domicilio es para estudiantes activos. Tienes hasta **5 días hábiles** para devolver. Completa el formulario:"
+                    : "¡Perfecto! El préstamo en sala es inmediato. Solo necesito algunos datos:",
+                ``
+            );
+            await delay(300);
+            mostrarFormPrestamo(tipo);
+        }
+
+        async function flujoPrestamoBuscar() {
+            await botResponde("¿En qué área temática estás buscando el recurso?",
+                `<div class="opciones-btns" style="margin-top:8px">
+            <button class="opc-btn" onclick="flujoPrestamoArea('Ciencias de la salud')">⚕️ Salud</button>
+            <button class="opc-btn" onclick="flujoPrestamoArea('Ingeniería y tecnología')">🏗️ Ingeniería</button>
+            <button class="opc-btn" onclick="flujoPrestamoArea('Ciencias sociales y humanidades')">📖 Humanidades</button>
+            <button class="opc-btn" onclick="flujoPrestamoArea('Administración y negocios')">💼 Negocios</button>
+            <button class="opc-btn" onclick="flujoPrestamoArea('Ciencias básicas')">🔬 Ciencias</button>
+            <button class="opc-btn" onclick="flujoPrestamoArea('Otra área')">❓ Otra área</button>
+        </div>`
+            );
+        }
+
+        async function flujoPrestamoArea(area) {
+            addUserMessage(area);
+            showTyping();
+            await delay(800);
+            removeTyping();
+            const recomendaciones = {
+                'Ciencias de la salud': 'Elsevier, Springer, PubMed (acceso libre)',
+                'Ingeniería y tecnología': 'IEEE Xplore, Taylor & Francis, Scopus',
+                'Ciencias sociales y humanidades': 'EBSCOhost, ProQuest, JSTOR',
+                'Administración y negocios': 'ProQuest Business, EBSCOhost Business Source',
+                'Ciencias básicas': 'Web of Science, Scopus, Science Direct',
+                'Otra área': 'EBSCOhost y ProQuest (cubren múltiples disciplinas)'
+            };
+            addBotMessage(
+                `Para **${area}** te recomiendo estas bases de datos:\n\n📌 **${recomendaciones[area]}**\n\nEncuéntralas en <a href="https://bidig.areandina.edu.co/" target="_blank" style="color:#1d4ed8;font-weight:600">bidig.areandina.edu.co</a> → sección "Bases de datos".\n\n¿Necesitas algo más?`
+            );
+        }
+
+        function mostrarFormPrestamo(tipo) {
+            const hoy = new Date().toISOString().split('T')[0];
+            const maxDate = new Date(); maxDate.setDate(maxDate.getDate() + (tipo === 'domicilio' ? 5 : 1));
+            const maxDateStr = maxDate.toISOString().split('T')[0];
+
+            const msgs = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.className = 'msg bot';
+            div.innerHTML = `
+        <img class="msg-avatar" src="${AVATAR}" onerror="this.src='${FALLBACK}'" alt="Librín">
+        <div>
+            <div class="reserva-form">
+                <h4>📖 Solicitud de Préstamo</h4>
+                <div class="form-field">
+                    <label>👤 Nombre completo *</label>
+                    <input type="text" id="pre-nombre" placeholder="Tu nombre completo">
+                </div>
+                <div class="form-field">
+                    <label>🪪 Número de cédula *</label>
+                    <input type="text" id="pre-cedula" placeholder="Tu número de cédula" maxlength="15" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                </div>
+                <div class="form-field">
+                    <label>📧 Correo institucional *</label>
+                    <input type="email" id="pre-email" placeholder="usuario@areandina.edu.co">
+                </div>
+                <div class="form-field">
+                    <label>📗 Título del libro *</label>
+                    <input type="text" id="pre-titulo" placeholder="Título del libro">
+                </div>
+                <div class="form-field">
+                    <label>✍️ Autor *</label>
+                    <input type="text" id="pre-autor" placeholder="Nombre del autor">
+                </div>
+                <div class="form-field">
+                    <label>📅 Fecha de devolución *</label>
+                    <input type="date" id="pre-devolucion" min="${hoy}" max="${maxDateStr}">
+                </div>
+                <button class="form-submit" onclick="confirmarPrestamo()">📖 Solicitar Préstamo</button>
+            </div>
+            <div class="msg-time">${getTime()}</div>
+        </div>`;
+            msgs.appendChild(div);
+            msgs.scrollTop = msgs.scrollHeight;
+        }
+
+        async function confirmarPrestamo() {
+            const nombre = document.getElementById('pre-nombre')?.value?.trim();
+            const cedula = document.getElementById('pre-cedula')?.value?.trim();
+            const email = document.getElementById('pre-email')?.value?.trim();
+            const titulo = document.getElementById('pre-titulo')?.value?.trim();
+            const autor = document.getElementById('pre-autor')?.value?.trim();
+            const devolucion = document.getElementById('pre-devolucion')?.value;
+
+            if (!nombre || !cedula || !email || !titulo || !autor || !devolucion) {
+                alert('⚠️ Por favor completa todos los campos.'); return;
+            }
+            if (!/^\d+$/.test(cedula)) { alert('⚠️ La cédula solo debe contener números.'); return; }
+
+            showTyping();
+            try {
+                await fetch('/api/prestamo', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre, documento: cedula, email, titulo_libro: titulo, autor, sede: 'Pereira', fecha_devolucion: devolucion })
+                });
+            } catch (e) { }
+            removeTyping();
+
+            const fechaObj = new Date(devolucion + 'T12:00:00');
+            const fechaFmt = fechaObj.toLocaleDateString('es', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+            addBotMessage('', `
+        <div class="confirmacion-card">
+            <div class="conf-title">✅ ¡Préstamo registrado!</div>
+            👤 <strong>${nombre}</strong><br>
+            🪪 Cédula: ${cedula}<br>
+            📗 <strong>${titulo}</strong> — ${autor}<br>
+            📅 Devolución: ${fechaFmt}<br>
+            📍 Sede: Pereira<br>
+            📧 Confirmación a: ${email}
+        </div>
+        <div class="nota-card">
+            <strong>📌 Recuerda:</strong>
+            Devuelve el libro en la fecha acordada para evitar sanciones. ${getNota()}
+        </div>`
+            );
+        }
+
+        // ══════════════════════════════════════════════════════════════════════════════
+        // FLUJO 3: SOPORTE TÉCNICO
+        // ══════════════════════════════════════════════════════════════════════════════
+        async function iniciarFlujoSoporte() {
+            addUserMessage('🛠️ Necesito soporte técnico');
+            flujoData.soporte = {};
+            await botResponde(
+                "Tranquilo/a, estoy aquí para ayudarte 🛠️ ¿Con qué plataforma o servicio tienes el problema?",
+                `<div class="opciones-btns" style="margin-top:8px">
+            <button class="opc-btn" onclick="flujoSoportePaso2('bidig')">💻 Plataforma BIDIG</button>
+            <button class="opc-btn" onclick="flujoSoportePaso2('bases')">📊 Bases de datos</button>
+            <button class="opc-btn" onclick="flujoSoportePaso2('acceso')">🔑 Problemas de acceso/login</button>
+            <button class="opc-btn" onclick="flujoSoportePaso2('computadores')">🖥️ Computadores de la biblioteca</button>
+            <button class="opc-btn" onclick="flujoSoportePaso2('wifi')">📶 WiFi / Conexión</button>
+            <button class="opc-btn" onclick="flujoSoportePaso2('otro')">❓ Otro</button>
+        </div>`
+            );
+        }
+
+        async function flujoSoportePaso2(plataforma) {
+            const labels = {
+                bidig: '💻 Plataforma BIDIG', bases: '📊 Bases de datos',
+                acceso: '🔑 Problemas de acceso/login', computadores: '🖥️ Computadores de la biblioteca',
+                wifi: '📶 WiFi / Conexión', otro: '❓ Otro'
+            };
+            addUserMessage(labels[plataforma]);
+            flujoData.soporte.plataforma = labels[plataforma];
+
+            await botResponde(
+                `Entendido, problema con **${labels[plataforma]}**. ¿Cuál es el tipo de problema?`,
+                `<div class="opciones-btns" style="margin-top:8px">
+            <button class="opc-btn" onclick="flujoSoportePaso3('No puedo iniciar sesión')">🔒 No puedo iniciar sesión</button>
+            <button class="opc-btn" onclick="flujoSoportePaso3('La página no carga')">🌐 La página no carga</button>
+            <button class="opc-btn" onclick="flujoSoportePaso3('No puedo descargar el recurso')">⬇️ No puedo descargar</button>
+            <button class="opc-btn" onclick="flujoSoportePaso3('Error o mensaje de error')">⚠️ Aparece un error</button>
+            <button class="opc-btn" onclick="flujoSoportePaso3('Otro problema técnico')">❓ Otro problema</button>
+        </div>`
+            );
+        }
+
+        async function flujoSoportePaso3(problema) {
+            addUserMessage(problema);
+            flujoData.soporte.problema = problema;
+
+            // Intentar solución rápida
+            const soluciones = {
+                'No puedo iniciar sesión': '🔐 Verifica que estés usando tu correo **@areandina.edu.co** y la contraseña correcta. Si olvidaste tu contraseña, usa la opción "¿Olvidaste tu contraseña?" en la página de login.',
+                'La página no carga': '🌐 Intenta: (1) Refrescar la página con **F5**, (2) Limpiar caché del navegador, (3) Usar Chrome o Firefox actualizados, (4) Desactivar extensiones del navegador.',
+                'No puedo descargar el recurso': '⬇️ Algunos recursos requieren estar **dentro de la red de Areandina** o usar la **VPN institucional**. Verifica tu conexión o acércate al punto de servicio.',
+                'Error o mensaje de error': '⚠️ Toma una captura de pantalla del error. Esto será útil para el equipo de soporte.',
+                'Otro problema técnico': '🛠️ Vamos a registrar tu caso para que el equipo de soporte te contacte.'
+            };
+
+            await botResponde(
+                `💡 **Solución rápida:**\n${soluciones[problema]}`,
+                `<div class="opciones-btns" style="margin-top:8px">
+            <button class="opc-btn" onclick="addUserMessage('✅ Se solucionó'); botResponde('¡Excelente! 🎉 Me alegra que se haya resuelto. Si tienes otro problema, aquí estaré.')">✅ Se solucionó</button>
+            <button class="opc-btn" onclick="flujoSoporteFormulario()">❌ Sigue el problema</button>
+        </div>`,
+                900
+            );
+        }
+
+        async function flujoSoporteFormulario() {
+            await botResponde("Vamos a registrar tu caso para que el equipo de soporte te contacte. Por favor completa:");
+            await delay(200);
+
+            const msgs = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.className = 'msg bot';
+            div.innerHTML = `
+        <img class="msg-avatar" src="${AVATAR}" onerror="this.src='${FALLBACK}'" alt="Librín">
+        <div>
+            <div class="reserva-form">
+                <h4>🛠️ Caso de Soporte Técnico</h4>
+                <div class="form-field">
+                    <label>👤 Nombre completo *</label>
+                    <input type="text" id="sop-nombre" placeholder="Tu nombre completo">
+                </div>
+                <div class="form-field">
+                    <label>🪪 Número de cédula *</label>
+                    <input type="text" id="sop-cedula" placeholder="Tu número de cédula" maxlength="15" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                </div>
+                <div class="form-field">
+                    <label>📧 Correo de contacto *</label>
+                    <input type="email" id="sop-email" placeholder="Tu correo electrónico">
+                </div>
+                <div class="form-field">
+                    <label>🖥️ Plataforma con problema</label>
+                    <input type="text" id="sop-plataforma" value="${flujoData.soporte?.plataforma || ''}" placeholder="Ej: BIDIG, bases de datos...">
+                </div>
+                <div class="form-field">
+                    <label>📝 Describe el problema detalladamente *</label>
+                    <textarea id="sop-descripcion" placeholder="Describe qué sucede, desde cuándo, qué mensaje de error aparece...">${flujoData.soporte?.problema || ''}</textarea>
+                </div>
+                <button class="form-submit" onclick="confirmarSoporte()">🛠️ Enviar caso de soporte</button>
+            </div>
+            <div class="msg-time">${getTime()}</div>
+        </div>`;
+            msgs.appendChild(div);
+            msgs.scrollTop = msgs.scrollHeight;
+        }
+
+        async function confirmarSoporte() {
+            const nombre = document.getElementById('sop-nombre')?.value?.trim();
+            const cedula = document.getElementById('sop-cedula')?.value?.trim();
+            const email = document.getElementById('sop-email')?.value?.trim();
+            const plataforma = document.getElementById('sop-plataforma')?.value?.trim();
+            const descripcion = document.getElementById('sop-descripcion')?.value?.trim();
+
+            if (!nombre || !cedula || !email || !descripcion) { alert('⚠️ Por favor completa todos los campos obligatorios.'); return; }
+            if (!/^\d+$/.test(cedula)) { alert('⚠️ La cédula solo debe contener números.'); return; }
+
+            showTyping();
+            try {
+                await fetch('/api/soporte', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre, documento: cedula, email, tipo_problema: plataforma, descripcion })
+                });
+            } catch (e) { }
+            removeTyping();
+
+            addBotMessage('', `
+        <div class="confirmacion-card">
+            <div class="conf-title">✅ ¡Caso registrado!</div>
+            👤 <strong>${nombre}</strong><br>
+            🪪 Cédula: ${cedula}<br>
+            🖥️ Plataforma: ${plataforma || 'No especificada'}<br>
+            📝 Caso: ${descripcion.substring(0, 80)}${descripcion.length > 80 ? '...' : ''}<br>
+            📧 Respuesta a: <strong>${email}</strong>
+        </div>
+        <div class="nota-card">
+            <strong>⏱️ Tiempos de respuesta:</strong>
+            Casos urgentes: mismo día hábil<br>
+            Casos normales: 1-2 días hábiles<br>
+            También puedes escribir a: biblioteca@areandina.edu.co
+        </div>`
+            );
+        }
+
+        // ══════════════════════════════════════════════════════════════════════════════
+        // RESERVAS (existente mejorado)
+        // ══════════════════════════════════════════════════════════════════════════════
+        function mostrarCubiculos() {
+            addUserMessage('🪑 Quiero reservar un espacio');
+            const msgs = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.className = 'msg bot';
+            div.innerHTML = `
+        <img class="msg-avatar" src="${AVATAR}" onerror="this.src='${FALLBACK}'" alt="Librín">
+        <div>
+            <div class="bubble">¡Claro! 🎉 Estos son los espacios disponibles en la sede <strong>Pereira</strong>. Selecciona el que necesitas:</div>
+            <div class="cubiculos-grid">
+                ${CUBICULOS.map(c => `
+                    <div class="cubiculo-card" onclick="iniciarReserva('${c.tipo}','${c.nombre}',${c.min},${c.max})">
+                        <div class="icon">${c.icon}</div>
+                        <div class="nombre">${c.nombre}</div>
+                        <div class="capacidad">👤 ${c.capacidad}</div>
+                    </div>`).join('')}
+            </div>
+            <div class="msg-time">${getTime()}</div>
+        </div>`;
+            msgs.appendChild(div);
+            msgs.scrollTop = msgs.scrollHeight;
+        }
+
+        function generarHoras() {
+            const horas = [];
+            for (let h = 8; h < 20; h++) {
+                const hStr = h.toString().padStart(2, '0');
+                horas.push(`<option value="${hStr}:00">${hStr}:00</option>`);
+                horas.push(`<option value="${hStr}:45">${hStr}:45</option>`);
+            }
+            horas.push(`<option value="20:00">20:00</option>`);
+            return horas.join('');
+        }
+
+        function generarOpcionesPersonas(min, max) {
+            let opts = '';
+            for (let i = min; i <= max; i++) opts += `<option value="${i}">${i} persona${i > 1 ? 's' : ''}</option>`;
+            return opts;
+        }
+
+        function calcularHoraFin(horaInicio) {
+            if (!horaInicio) return;
+            const [h, m] = horaInicio.split(':').map(Number);
+            const totalMin = h * 60 + m + 45;
+            const hFin = Math.floor(totalMin / 60).toString().padStart(2, '0');
+            const mFin = (totalMin % 60).toString().padStart(2, '0');
+            const horaFin = `${hFin}:${mFin}`;
+            setTimeout(() => {
+                const display = document.getElementById('res-hora-fin-display');
+                if (display) {
+                    display.textContent = horaFin;
+                    display.dataset.value = horaFin;
+                    display.style.color = '#1e40af';
+                    display.style.fontWeight = '600';
+                }
+            }, 50);
+        }
+
+        function iniciarReserva(tipo, nombre, min, max) {
+            reservaData = { tipo, nombre, min, max };
+            asistentesCount = min;
+            const msgs = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.className = 'msg bot';
+            const hoy = new Date().toISOString().split('T')[0];
+            const icono = CUBICULOS.find(c => c.tipo === tipo)?.icon || '🪑';
+            const esGrupal = max > 1;
+
+            const personasHTML = `
+        <div class="form-field">
+            <label>👥 Número de personas * (${min} - ${max})</label>
+            <div class="personas-select-wrapper">
+                <select id="res-personas" onchange="actualizarAsistentes(${min},${max})">
+                    ${generarOpcionesPersonas(min, max)}
+                </select>
+            </div>
+            <span class="capacidad-badge">ℹ️ Capacidad: mín. ${min} — máx. ${max} persona${max > 1 ? 's' : ''}</span>
+        </div>`;
+
+            let asistentesHTML = '';
+            if (esGrupal) {
+                let inputs = '';
+                for (let i = 1; i <= min; i++) {
+                    const esTitular = i === 1;
+                    inputs += `<div class="asistente-row" id="asistente-row-${i}">
+        <input type="text" id="asistente-${i}" 
+            placeholder="${esTitular ? '👤 Tu cédula (titular)' : 'Cédula asistente ' + i}" 
+            maxlength="15" 
+            oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+            ${esTitular ? 'readonly style="background:#eff6ff;color:#1e40af;font-weight:600;border-color:#bfdbfe;"' : ''}>
+    </div>`;
+                }
+                asistentesHTML = `
+            <div class="form-field">
+                <label>🪪 Cédulas de los asistentes *</label>
+                <div class="asistentes-container" id="asistentes-container">${inputs}</div>
+            </div>`;
+            }
+
+            div.innerHTML = `
+        <img class="msg-avatar" src="${AVATAR}" onerror="this.src='${FALLBACK}'" alt="Librín">
+        <div>
+            <div class="bubble">¡Perfecto! Completa el formulario para reservar tu <strong>${nombre}</strong> ${icono}:</div>
+            <div class="reserva-form">
+                <h4>📋 Reservar ${nombre}</h4>
+                <div class="form-field"><label>👤 Nombre completo *</label><input type="text" id="res-nombre" placeholder="Tu nombre completo"></div>
+                <div class="form-field"><label>🪪 Número de cédula *</label><input type="text" id="res-documento" placeholder="Tu número de cédula" maxlength="15" oninput="this.value=this.value.replace(/[^0-9]/g,'')"></div>
+                <div class="form-field"><label>📧 Correo institucional *</label><input type="email" id="res-email" placeholder="usuario@areandina.edu.co"></div>
+                ${personasHTML}
+                ${asistentesHTML}
+                <div class="form-field"><label>📅 Fecha *</label><input type="date" id="res-fecha" min="${hoy}"></div>
+                <div class="form-field"><label>🕐 Hora de inicio *</label><select id="res-hora-inicio" onchange="calcularHoraFin(this.value)">${generarHoras()}</select></div>
+                <div class="form-field">
+                    <label>🕑 Hora de fin (automática · 45 min)</label>
+                    <div id="res-hora-fin-display" style="background:#f1f5fd;border:1.5px solid #e2e8f0;border-radius:10px;padding:7px 10px;font-size:0.78rem;color:#475569;">Selecciona hora de inicio</div>
+                </div>
+                <button class="form-submit" onclick="confirmarReserva()">✅ Confirmar Reserva</button>
+            </div>
+            <div class="msg-time">${getTime()}</div>
+        </div>`;
+            msgs.appendChild(div);
+            msgs.scrollTop = msgs.scrollHeight;
+        }
+        function sincronizarTitular() {
+            const doc = document.getElementById('res-documento');
+            const a1 = document.getElementById('asistente-1');
+            if (doc && a1) a1.value = doc.value;
+        }
+        function actualizarAsistentes(min, max) {
+            const num = parseInt(document.getElementById('res-personas')?.value) || min;
+            const container = document.getElementById('asistentes-container');
+            if (!container) return;
+            container.innerHTML = '';
+            asistentesCount = num;
+            for (let i = 1; i <= num; i++) {
+                const row = document.createElement('div');
+                row.className = 'asistente-row'; row.id = `asistente-row-${i}`;
+                row.innerHTML = `<input type="text" id="asistente-${i}" 
+    placeholder="${i === 1 ? '👤 Tu cédula (titular)' : 'Cédula asistente ' + i}" 
+    maxlength="15" 
+    oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+    ${i === 1 ? 'readonly style="background:#eff6ff;color:#1e40af;font-weight:600;border-color:#bfdbfe;"' : ''}>`;
+                container.appendChild(row);
+            }
+        }
+
+        function confirmarReserva() {
+            const nombre = document.getElementById('res-nombre')?.value?.trim();
+            const documento = document.getElementById('res-documento')?.value?.trim();
+            const email = document.getElementById('res-email')?.value?.trim();
+            const personas = document.getElementById('res-personas')?.value;
+            const fecha = document.getElementById('res-fecha')?.value;
+            const horaInicio = document.getElementById('res-hora-inicio')?.value;
+            const horaFin = document.getElementById('res-hora-fin-display')?.dataset.value || '';
+
+            if (!nombre || !documento || !email || !personas || !fecha || !horaInicio || !horaFin) { alert('⚠️ Por favor completa todos los campos obligatorios.'); return; }
+            if (!/^\d+$/.test(documento)) { alert('⚠️ El número de cédula solo debe contener números.'); return; }
+
+            const num = parseInt(personas);
+            const documentosAsistentes = [];
+            for (let i = 1; i <= asistentesCount; i++) {
+                const val = document.getElementById(`asistente-${i}`)?.value?.trim();
+                if (val) documentosAsistentes.push(val);
+            }
+
+            const nota = getNota();
+            const fechaObj = new Date(fecha + 'T12:00:00');
+            const fechaFormateada = fechaObj.toLocaleDateString('es', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+            const msgs = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.className = 'msg bot';
+            div.innerHTML = `
+        <img class="msg-avatar" src="${AVATAR}" onerror="this.src='${FALLBACK}'" alt="Librín">
+        <div>
+            <div class="confirmacion-card">
+                <div class="conf-title">✅ ¡Reserva confirmada!</div>
+                🪪 Cédula: <strong>${documento}</strong><br>
+                📍 Sede: <strong>Pereira</strong> | Espacio: <strong>${reservaData.nombre}</strong><br>
+                👤 ${nombre}<br>📧 ${email}<br>
+                👥 ${num} persona(s)${documentosAsistentes.length > 0 ? '<br>🪪 Asistentes: ' + documentosAsistentes.join(', ') : ''}<br>
+                📅 ${fechaFormateada}<br>🕐 ${horaInicio} — ${horaFin}
+            </div>
+            <div class="nota-card"><strong>📌 Recuerda al llegar:</strong>${nota}</div>
+            <div class="msg-time">${getTime()}</div>
+        </div>`;
+            msgs.appendChild(div);
+            msgs.scrollTop = msgs.scrollHeight;
+
+            fetch('/api/reserva', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nombre, documento, email, personas: num, documentos_asistentes: documentosAsistentes.join(', '), sede: 'Pereira', espacio: reservaData.nombre, fecha, horaInicio, horaFin })
+            }).catch(() => { });
+        }
+
+        // ── RENOVAR ───────────────────────────────────────────────────────────────────
+        function mostrarFormRenovar() {
+            addUserMessage('🔄 Renovar mi reserva');
+            const msgs = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.className = 'msg bot';
+            div.innerHTML = `
+        <img class="msg-avatar" src="${AVATAR}" onerror="this.src='${FALLBACK}'" alt="Librín">
+        <div>
+            <div class="bubble">Puedes renovar tu reserva por <strong>1 hora adicional</strong>. Ingresa tus datos:</div>
+            <div class="reserva-form">
+                <h4>🔄 Renovar Reserva</h4>
+                <div class="form-field"><label>🪪 Número de cédula *</label><input type="text" id="ren-documento" placeholder="Tu número de cédula" maxlength="15" oninput="this.value=this.value.replace(/[^0-9]/g,'')"></div>
+                <div class="form-field"><label>📧 Correo con el que reservaste *</label><input type="email" id="ren-email" placeholder="usuario@areandina.edu.co"></div>
+                <button class="form-submit" onclick="solicitarRenovacion()">🔄 Solicitar Renovación</button>
+            </div>
+            <div class="msg-time">${getTime()}</div>
+        </div>`;
+            msgs.appendChild(div);
+            msgs.scrollTop = msgs.scrollHeight;
+        }
+
+        async function solicitarRenovacion() {
+            const documento = document.getElementById('ren-documento')?.value?.trim();
+            const email = document.getElementById('ren-email')?.value?.trim();
+            if (!documento || !email) { alert('⚠️ Por favor completa todos los campos.'); return; }
+            showTyping();
+            try {
+                const response = await fetch('/api/renovar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ documento, email }) });
+                const data = await response.json();
+                removeTyping();
+                if (data.renovado) {
+                    addBotMessage(`✅ **¡Renovación confirmada!**\n\n🪪 Cédula: ${documento}\n🕐 Nueva hora de fin: **${data.nuevaHoraFin}**\n\nRecuerda respetar el tiempo de los demás. ⏳`);
+                } else {
+                    addBotMessage(`😔 No pudimos renovar la reserva con cédula **${documento}**.\n\nPosibles razones:\n- La cédula o correo no coinciden\n- No tienes reserva activa\n- Ya fue renovada anteriormente\n\nAcércate al punto de atención de la biblioteca.`);
+                }
+            } catch (err) {
+                removeTyping();
+                addBotMessage('Ups, hubo un problema de conexión. 😕 Por favor intenta de nuevo.');
+            }
+        }
+
+        // ── CHAT LIBRE ────────────────────────────────────────────────────────────────
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+            input.value = ''; input.style.height = 'auto';
+            const lower = text.toLowerCase();
+
+            if (lower.includes('reserv') || lower.includes('cubículo') || lower.includes('cubiculo') || lower.includes('sala interactiva')) {
+                addUserMessage(text); setTimeout(() => mostrarCubiculos(), 300); return;
+            }
+            if (lower.includes('renov')) { addUserMessage(text); setTimeout(() => mostrarFormRenovar(), 300); return; }
+            if (lower.includes('acceso') || lower.includes('contraseña') || lower.includes('bidig') || lower.includes('login')) {
+                addUserMessage(text); setTimeout(() => iniciarFlujoAcceso(), 300); return;
+            }
+            if (lower.includes('préstamo') || lower.includes('prestamo') || lower.includes('libro')) {
+                addUserMessage(text); setTimeout(() => iniciarFlujoPrestamo(), 300); return;
+            }
+            if (lower.includes('soporte') || lower.includes('problema') || lower.includes('error') || lower.includes('no funciona')) {
+                addUserMessage(text); setTimeout(() => iniciarFlujoSoporte(), 300); return;
+            }
+
+            addUserMessage(text);
+            messageHistory.push({ role: 'user', content: text });
+            showTyping();
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ messages: messageHistory, system: SYSTEM_PROMPT })
+                });
+                const data = await response.json();
+                removeTyping();
+                const reply = data.content?.[0]?.text || 'Lo siento, hubo un error. Por favor intenta de nuevo.';
+                messageHistory.push({ role: 'assistant', content: reply });
+                addBotMessage(reply);
+            } catch (err) {
+                removeTyping();
+                addBotMessage('Ups, parece que hubo un problema de conexión. 😕 Por favor intenta de nuevo.');
+            }
+        }
+
+        function sendQuick(text) { document.getElementById('chat-input').value = text; sendMessage(); }
+        function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 80) + 'px'; }
+
+        setTimeout(() => {
+            const t = document.getElementById('welcome-tooltip');
+            if (t) { t.style.transition = 'opacity 0.5s'; t.style.opacity = '0'; setTimeout(() => t.remove(), 500); }
+        }, 6000);
+    </script>
+</body>
+
+</html>

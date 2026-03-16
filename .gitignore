@@ -1,0 +1,13 @@
+# Dependencias de Node.js
+node_modules/
+
+# Variables de entorno (contiene API keys — nunca subir a Git)
+.env
+
+# Logs
+*.log
+npm-debug.log*
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
