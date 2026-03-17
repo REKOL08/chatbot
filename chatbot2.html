@@ -1444,6 +1444,18 @@ Responde siempre de forma concisa, cálida y útil. Máximo 3 párrafos cortos.`
         </div>`;
             msgs.appendChild(div);
             msgs.scrollTop = msgs.scrollHeight;
+
+            msgs.appendChild(div);
+            msgs.scrollTop = msgs.scrollHeight;
+            setTimeout(() => {
+                const sel = document.getElementById('res-hora-inicio');
+                if (sel) calcularHoraFin(sel.value);
+            }, 150);
+        }
+
+        function generarHoras() {
+
+
         }
 
         function generarHoras() {
